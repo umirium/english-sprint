@@ -1,4 +1,4 @@
-const CACHE_NAME = 'english-sprint-v12';
+const CACHE_NAME = 'english-sprint-v13';
 const ASSETS = [
   './',
   './index.html',

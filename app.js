@@ -125,7 +125,7 @@ function setHint(message) {
   els.gestureHint.textContent = message;
   window.clearTimeout(setHint.timer);
   setHint.timer = window.setTimeout(() => {
-    els.gestureHint.textContent = '左右スワイプで前後、タップで答え';
+    els.gestureHint.textContent = '左右スワイプで前後';
   }, 1400);
 }
 
@@ -621,15 +621,6 @@ function bindGestures() {
         setHint(!settings.autoPlayback && !revealed ? '答え' : '次の問題');
       }
       return;
-    }
-    if (Math.abs(dx) < 12 && Math.abs(dy) < 12 && elapsed < 320) {
-      if (revealed) {
-        speakEnglish();
-      } else {
-        revealed = true;
-        render();
-        speakEnglish();
-      }
     }
   });
   els.studyPanel.addEventListener('pointercancel', () => {
