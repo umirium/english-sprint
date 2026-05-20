@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#101418" />
+  <title>瞬間英作文アプリ</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">English Sprint</p>
+        <h1>瞬間英作文</h1>
+      </div>
+      <button id="openSettingsBtn" type="button" class="icon-button" aria-label="設定を開く" title="設定">⚙</button>
+    </header>
+
+    <section class="category-screen" id="categoryScreen" aria-label="カテゴリ一覧">
+      <div class="screen-title">
+        <h2>カテゴリ</h2>
+        <p>学習するカテゴリを選択</p>
+      </div>
+      <div id="categoryList" class="category-list"></div>
+    </section>
+
+    <section class="study-panel" id="studyPanel" aria-label="問題画面" hidden>
+      <div class="study-topline">
+        <button id="backToCategoriesBtn" type="button" class="text-button">カテゴリ</button>
+        <span id="positionLabel">1 / 1</span>
+        <span id="modeLabel">通常</span>
+      </div>
+      <article class="question-card" id="questionCard">
+        <p id="cardSideLabel" class="prompt-label">日本語</p>
+        <p id="cardText" class="card-text"></p>
+      </article>
+      <div class="gesture-hint" id="gestureHint">左右スワイプで前後、タップで答え</div>
+    </section>
+
+  </main>
+
+  <div class="settings-modal" id="settingsModal" hidden>
+    <div class="settings-backdrop" id="settingsBackdrop"></div>
+    <section class="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <header class="dialog-header">
+        <h2 id="settingsTitle">設定</h2>
+        <button id="closeSettingsBtn" type="button" class="icon-button" aria-label="設定を閉じる">×</button>
+      </header>
+      <div class="settings-grid">
+        <div class="settings-panel">
+          <h2>音声</h2>
+          <label for="jaVoiceSelect">日本語音声</label>
+          <select id="jaVoiceSelect"></select>
+          <label for="enVoiceSelect">英語音声</label>
+          <select id="enVoiceSelect"></select>
+          <div class="rate-grid">
+            <label>
+              日本語速度
+              <input id="jaRateInput" type="range" min="0.5" max="1.8" step="0.1" />
+              <span id="jaRateValue"></span>
+            </label>
+            <label>
+              英語速度
+              <input id="enRateInput" type="range" min="0.5" max="1.8" step="0.1" />
+              <span id="enRateValue"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-panel">
+          <h2>画面</h2>
+          <button id="wakeLockBtn" type="button" aria-pressed="false">スリープ防止 OFF</button>
+          <p id="wakeLockStatus" class="muted-text">未使用</p>
+        </div>
+
+        <div class="settings-panel">
+          <h2>Google Sheets</h2>
+          <label for="sheetIdInput">Spreadsheet ID</label>
+          <input id="sheetIdInput" type="text" autocomplete="off" placeholder="Google SheetsのID" />
+          <label for="clientIdInput">OAuth Client ID</label>
+          <input id="clientIdInput" type="text" autocomplete="off" placeholder="後で設定" />
+          <label for="apiKeyInput">API Key</label>
+          <input id="apiKeyInput" type="text" autocomplete="off" placeholder="後で設定" />
+          <div class="button-row">
+            <button id="saveGoogleConfigBtn" type="button">保存</button>
+            <button id="loadSheetBtn" type="button">例文読込</button>
+            <button id="syncLogsBtn" type="button">ログ保存</button>
+          </div>
+          <p id="googleStatus" class="muted-text">未接続</p>
+        </div>
+      </div>
+
+      <section class="settings-panel">
+        <h2>例文</h2>
+        <textarea id="pairEditor" spellcheck="false" placeholder="カテゴリ[TAB]日本語[TAB]English の形式で入力"></textarea>
+        <div class="button-row">
+          <button id="applyPairsBtn" type="button">反映</button>
+          <button id="resetPairsBtn" type="button">サンプルに戻す</button>
+          <button id="exportLogsBtn" type="button">ログ表示</button>
+        </div>
+        <pre id="logOutput" class="log-output" hidden></pre>
+      </section>
+    </section>
+  </div>
+
+  <div class="bottom-bar" id="bottomBar" hidden>
+    <button id="autoModeBtn" type="button" class="toolbar-button" aria-pressed="false" aria-label="自動再生" title="自動再生">⏭</button>
+    <button id="playBtn" type="button" class="toolbar-button" aria-pressed="false" aria-label="再生" title="再生" disabled>▶</button>
+    <button id="shuffleBtn" type="button" class="toolbar-button" aria-pressed="false" aria-label="シャッフル" title="シャッフル">🔀</button>
+    <button id="repeatBtn" type="button" class="toolbar-button" aria-pressed="false" aria-label="ループ" title="ループ">🔁</button>
+  </div>
+
+  <script src="https://apis.google.com/js/api.js" async defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="storage.js"></script>
+  <script src="speech.js"></script>
+  <script src="google-sync.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
