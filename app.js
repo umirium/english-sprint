@@ -7,6 +7,8 @@ const els = {
   settingsModal: document.getElementById('settingsModal'),
   settingsBackdrop: document.getElementById('settingsBackdrop'),
   closeSettingsBtn: document.getElementById('closeSettingsBtn'),
+  settingsTabs: Array.from(document.querySelectorAll('.settings-tabs [role="tab"]')),
+  settingsPanels: Array.from(document.querySelectorAll('.settings-tab-panels [role="tabpanel"]')),
   positionLabel: document.getElementById('positionLabel'),
   modeLabel: document.getElementById('modeLabel'),
   backToCategoriesBtn: document.getElementById('backToCategoriesBtn'),
@@ -457,6 +459,9 @@ function bindEvents() {
   els.openSettingsBtn.addEventListener('click', openSettings);
   els.closeSettingsBtn.addEventListener('click', closeSettings);
   els.settingsBackdrop.addEventListener('click', closeSettings);
+  els.settingsTabs.forEach((tab) => {
+    tab.addEventListener('click', () => selectSettingsTab(tab.dataset.tab));
+  });
   els.backToCategoriesBtn.addEventListener('click', () => {
     saveSessionLog();
     showCategoryScreen();
@@ -557,6 +562,17 @@ function bindEvents() {
   window.addEventListener('beforeunload', saveSessionLog);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') requestWakeLock();
+  });
+}
+
+function selectSettingsTab(tabName) {
+  els.settingsTabs.forEach((tab) => {
+    const selected = tab.dataset.tab === tabName;
+    tab.setAttribute('aria-selected', String(selected));
+    tab.tabIndex = selected ? 0 : -1;
+  });
+  els.settingsPanels.forEach((panel) => {
+    panel.hidden = panel.dataset.panel !== tabName;
   });
 }
 

@@ -48,8 +48,14 @@
         <h2 id="settingsTitle">設定</h2>
         <button id="closeSettingsBtn" type="button" class="icon-button" aria-label="設定を閉じる">×</button>
       </header>
-      <div class="settings-grid">
-        <div class="settings-panel">
+      <div class="settings-tabs" role="tablist" aria-label="設定カテゴリ">
+        <button id="voiceTab" type="button" role="tab" aria-controls="voicePanel" aria-selected="true" data-tab="voice">音声</button>
+        <button id="screenTab" type="button" role="tab" aria-controls="screenPanel" aria-selected="false" data-tab="screen">画面</button>
+        <button id="googleTab" type="button" role="tab" aria-controls="googlePanel" aria-selected="false" data-tab="google">Google</button>
+        <button id="pairsTab" type="button" role="tab" aria-controls="pairsPanel" aria-selected="false" data-tab="pairs">例文</button>
+      </div>
+      <div class="settings-tab-panels">
+        <section id="voicePanel" class="settings-panel" role="tabpanel" aria-labelledby="voiceTab" data-panel="voice">
           <h2>音声</h2>
           <label for="jaVoiceSelect">日本語音声</label>
           <select id="jaVoiceSelect"></select>
@@ -67,15 +73,15 @@
               <span id="enRateValue"></span>
             </label>
           </div>
-        </div>
+        </section>
 
-        <div class="settings-panel">
+        <section id="screenPanel" class="settings-panel" role="tabpanel" aria-labelledby="screenTab" data-panel="screen" hidden>
           <h2>画面</h2>
           <button id="wakeLockBtn" type="button" aria-pressed="false">スリープ防止 OFF</button>
           <p id="wakeLockStatus" class="muted-text">未使用</p>
-        </div>
+        </section>
 
-        <div class="settings-panel">
+        <section id="googlePanel" class="settings-panel" role="tabpanel" aria-labelledby="googleTab" data-panel="google" hidden>
           <h2>Google Sheets</h2>
           <label for="sheetIdInput">Spreadsheet ID</label>
           <input id="sheetIdInput" type="text" autocomplete="off" placeholder="Google SheetsのID" />
@@ -89,19 +95,19 @@
             <button id="syncLogsBtn" type="button">ログ保存</button>
           </div>
           <p id="googleStatus" class="muted-text">未接続</p>
-        </div>
-      </div>
+        </section>
 
-      <section class="settings-panel">
-        <h2>例文</h2>
-        <textarea id="pairEditor" spellcheck="false" placeholder="カテゴリ[TAB]日本語[TAB]English の形式で入力"></textarea>
-        <div class="button-row">
-          <button id="applyPairsBtn" type="button">反映</button>
-          <button id="resetPairsBtn" type="button">サンプルに戻す</button>
-          <button id="exportLogsBtn" type="button">ログ表示</button>
-        </div>
-        <pre id="logOutput" class="log-output" hidden></pre>
-      </section>
+        <section id="pairsPanel" class="settings-panel" role="tabpanel" aria-labelledby="pairsTab" data-panel="pairs" hidden>
+          <h2>例文</h2>
+          <textarea id="pairEditor" spellcheck="false" placeholder="カテゴリ[TAB]日本語[TAB]English の形式で入力"></textarea>
+          <div class="button-row">
+            <button id="applyPairsBtn" type="button">反映</button>
+            <button id="resetPairsBtn" type="button">サンプルに戻す</button>
+            <button id="exportLogsBtn" type="button">ログ表示</button>
+          </div>
+          <pre id="logOutput" class="log-output" hidden></pre>
+        </section>
+      </div>
     </section>
   </div>
 
