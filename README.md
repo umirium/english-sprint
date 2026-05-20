@@ -102,6 +102,22 @@ https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit
 python3 -m http.server 8000
 ```
 
+## GitHub Pages公開
+
+`.github/workflows/pages.yml` でGitHub Pagesへ静的ファイルをデプロイします。
+
+`main` ブランチへpushすると、GitHub Actionsがリポジトリ直下のファイルをPagesへ公開します。リポジトリ名を `english-sprint`、GitHubユーザー名を `umirium` にした場合、公開URLは以下になります。
+
+```text
+https://umirium.github.io/english-sprint/
+```
+
+Google Sheets連携をPages上で使う場合は、Google CloudのOAuth設定で `Authorized JavaScript origins` に以下を追加してください。
+
+```text
+https://umirium.github.io
+```
+
 ## 画面スリープ防止
 
 設定画面の `スリープ防止` をONにすると、Screen Wake Lock APIで画面の自動スリープを抑制します。
