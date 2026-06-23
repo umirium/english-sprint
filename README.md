@@ -17,8 +17,8 @@
 
 `Sentences` シートを作り、2行目以降を以下の形式にしてください。
 
-| A:id | B:category | C:japanese | D:english | E:tags |
-|---|---|---|---|---|
+| A:id | B:mainCategory | C:subCategory | D:japanese | E:english | F:tags | G:comment |
+|---|---|---|---|---|---|---|
 
 ## ログシート形式
 
@@ -35,15 +35,15 @@
 2. その中に `Sentences` と `Logs` の2シートを作成します。
 3. `Sentences` の1行目に以下のヘッダーを入れます。
 
-| id | category | japanese | english | tags |
-|---|---|---|---|---|
+| id | mainCategory | subCategory | japanese | english | tags | comment |
+|---|---|---|---|---|---|---|
 
 4. `Sentences` の2行目以降に例文を追加します。
 
-| id | category | japanese | english | tags |
-|---|---|---|---|---|
-| basic-001 | 基本文型 | 私は毎朝コーヒーを飲みます。 | I drink coffee every morning. | daily |
-| question-001 | 疑問文 | あなたは昨日誰に会いましたか？ | Who did you meet yesterday? | question |
+| id | mainCategory | subCategory | japanese | english | tags | comment |
+|---|---|---|---|---|---|---|
+| basic-001 | 基本文型 | 現在形 | 私は毎朝コーヒーを飲みます。 | I drink coffee every morning. | daily | every morning は「毎朝」。 |
+| question-001 | 疑問文 | Who | あなたは昨日誰に会いましたか？ | Who did you meet yesterday? | question | 目的語の「誰」を聞く形です。 |
 
 5. `Logs` の1行目に以下のヘッダーを入れます。
 
@@ -81,14 +81,16 @@ https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit
    - `OAuth Client ID`
    - `API Key`
 3. `保存` を押します。
-4. `例文読込` を押すと、`Sentences!A2:E` から例文を読み込みます。
+4. `例文読込` を押すと、`Sentences!A2:G` から例文を読み込みます。
 5. `ログ保存` を押すと、学習ログを `Logs!A:I` に追記します。
 
 初回接続時はGoogleの認可画面が開きます。利用するGoogleアカウントで許可してください。
 
 ### 5. 注意点
 
-- `category` が同じ行は、アプリ上で同じカテゴリにまとめられます。
+- `mainCategory` が同じ行はメインカテゴリにまとめられます。
+- `subCategory` が同じ行は、そのメインカテゴリ内のサブカテゴリにまとめられます。
+- `comment` は英語回答表示時に補足として表示されます。
 - `id` は各問題で重複しない値にしてください。
 - 例文の読み込み対象は `Sentences` シート、ログの保存先は `Logs` シートで固定です。
 - OAuthの `Authorized JavaScript origins` には、実際にアプリを開くオリジンを完全一致で登録してください。

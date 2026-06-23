@@ -12,31 +12,32 @@
   <main class="app-shell">
     <header class="app-header">
       <div>
-        <p class="eyebrow">English Sprint</p>
-        <h1>瞬間英作文</h1>
+        <button id="appHomeBtn" type="button" class="brand-button" aria-label="カテゴリ一覧に戻る" disabled>
+          <h1>English Sprint</h1>
+        </button>
       </div>
       <button id="openSettingsBtn" type="button" class="icon-button" aria-label="設定を開く" title="設定">⚙</button>
     </header>
 
     <section class="category-screen" id="categoryScreen" aria-label="カテゴリ一覧">
       <div class="screen-title">
-        <h2>カテゴリ</h2>
-        <p>学習するカテゴリを選択</p>
+        <div>
+          <button id="categoryBackBtn" type="button" class="category-back" hidden>← メインカテゴリ</button>
+          <h2 id="categoryTitle">カテゴリ</h2>
+        </div>
+        <p id="categoryDescription">学習するカテゴリを選択</p>
       </div>
       <div id="categoryList" class="category-list"></div>
     </section>
 
     <section class="study-panel" id="studyPanel" aria-label="問題画面" hidden>
       <div class="study-topline">
-        <button id="backToCategoriesBtn" type="button" class="text-button">カテゴリ</button>
         <span id="positionLabel">1 / 1</span>
-        <span id="modeLabel">通常</span>
       </div>
       <article class="question-card" id="questionCard">
-        <p id="cardSideLabel" class="prompt-label">日本語</p>
         <p id="cardText" class="card-text"></p>
+        <p id="commentText" class="comment-text" hidden></p>
       </article>
-      <div class="gesture-hint" id="gestureHint">左右スワイプで前後</div>
     </section>
 
   </main>
@@ -51,8 +52,7 @@
       <div class="settings-tabs" role="tablist" aria-label="設定カテゴリ">
         <button id="voiceTab" type="button" role="tab" aria-controls="voicePanel" aria-selected="true" data-tab="voice">音声</button>
         <button id="screenTab" type="button" role="tab" aria-controls="screenPanel" aria-selected="false" data-tab="screen">画面</button>
-        <button id="googleTab" type="button" role="tab" aria-controls="googlePanel" aria-selected="false" data-tab="google">Google</button>
-        <button id="pairsTab" type="button" role="tab" aria-controls="pairsPanel" aria-selected="false" data-tab="pairs">例文</button>
+        <button id="dataTab" type="button" role="tab" aria-controls="dataPanel" aria-selected="false" data-tab="data">データ</button>
       </div>
       <div class="settings-tab-panels">
         <section id="voicePanel" class="settings-panel" role="tabpanel" aria-labelledby="voiceTab" data-panel="voice">
@@ -81,7 +81,7 @@
           <p id="wakeLockStatus" class="muted-text">未使用</p>
         </section>
 
-        <section id="googlePanel" class="settings-panel" role="tabpanel" aria-labelledby="googleTab" data-panel="google" hidden>
+        <section id="dataPanel" class="settings-panel" role="tabpanel" aria-labelledby="dataTab" data-panel="data" hidden>
           <h2>Google Sheets</h2>
           <label for="sheetIdInput">Spreadsheet ID</label>
           <input id="sheetIdInput" type="text" autocomplete="off" placeholder="Google SheetsのID" />
@@ -92,28 +92,30 @@
           <div class="button-row">
             <button id="saveGoogleConfigBtn" type="button">保存</button>
             <button id="loadSheetBtn" type="button">例文読込</button>
-            <button id="syncLogsBtn" type="button">ログ保存</button>
           </div>
           <p id="googleStatus" class="muted-text">未接続</p>
-        </section>
 
-        <section id="pairsPanel" class="settings-panel" role="tabpanel" aria-labelledby="pairsTab" data-panel="pairs" hidden>
           <h2>例文</h2>
-          <textarea id="pairEditor" spellcheck="false" placeholder="カテゴリ[TAB]日本語[TAB]English の形式で入力"></textarea>
+          <textarea id="pairEditor" spellcheck="false" placeholder="メインカテゴリ[TAB]サブカテゴリ[TAB]日本語[TAB]English[TAB]tags[TAB]comment の形式で入力"></textarea>
           <div class="button-row">
             <button id="applyPairsBtn" type="button">反映</button>
             <button id="resetPairsBtn" type="button">サンプルに戻す</button>
             <button id="exportLogsBtn" type="button">ログ表示</button>
           </div>
-          <pre id="logOutput" class="log-output" hidden></pre>
+          <section id="logPanel" class="inline-log-panel" hidden>
+            <div class="inline-log-header">
+              <h3>ログ</h3>
+              <button id="closeLogBtn" type="button" class="compact-action">閉じる</button>
+            </div>
+            <pre id="logOutput" class="log-output"></pre>
+          </section>
         </section>
       </div>
     </section>
   </div>
 
   <div class="bottom-bar" id="bottomBar" hidden>
-    <button id="autoModeBtn" type="button" class="toolbar-button" aria-pressed="false" aria-label="自動再生" title="自動再生">⏭</button>
-    <button id="playBtn" type="button" class="toolbar-button" aria-pressed="false" aria-label="再生" title="再生" disabled>▶</button>
+    <button id="autoModeBtn" type="button" class="toolbar-button" aria-pressed="false" aria-label="自動再生" title="自動再生">▶︎A</button>
     <button id="shuffleBtn" type="button" class="toolbar-button" aria-pressed="false" aria-label="シャッフル" title="シャッフル">🔀</button>
     <button id="repeatBtn" type="button" class="toolbar-button" aria-pressed="false" aria-label="ループ" title="ループ">🔁</button>
   </div>

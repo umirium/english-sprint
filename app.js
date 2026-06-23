@@ -7,17 +7,19 @@ const els = {
   settingsModal: document.getElementById('settingsModal'),
   settingsBackdrop: document.getElementById('settingsBackdrop'),
   closeSettingsBtn: document.getElementById('closeSettingsBtn'),
+  logPanel: document.getElementById('logPanel'),
+  closeLogBtn: document.getElementById('closeLogBtn'),
   settingsTabs: Array.from(document.querySelectorAll('.settings-tabs [role="tab"]')),
   settingsPanels: Array.from(document.querySelectorAll('.settings-tab-panels [role="tabpanel"]')),
+  categoryBackBtn: document.getElementById('categoryBackBtn'),
+  categoryTitle: document.getElementById('categoryTitle'),
+  categoryDescription: document.getElementById('categoryDescription'),
+  appHomeBtn: document.getElementById('appHomeBtn'),
   positionLabel: document.getElementById('positionLabel'),
-  modeLabel: document.getElementById('modeLabel'),
-  backToCategoriesBtn: document.getElementById('backToCategoriesBtn'),
   questionCard: document.getElementById('questionCard'),
-  cardSideLabel: document.getElementById('cardSideLabel'),
   cardText: document.getElementById('cardText'),
-  gestureHint: document.getElementById('gestureHint'),
+  commentText: document.getElementById('commentText'),
   autoModeBtn: document.getElementById('autoModeBtn'),
-  playBtn: document.getElementById('playBtn'),
   shuffleBtn: document.getElementById('shuffleBtn'),
   repeatBtn: document.getElementById('repeatBtn'),
   jaVoiceSelect: document.getElementById('jaVoiceSelect'),
@@ -38,13 +40,13 @@ const els = {
   apiKeyInput: document.getElementById('apiKeyInput'),
   saveGoogleConfigBtn: document.getElementById('saveGoogleConfigBtn'),
   loadSheetBtn: document.getElementById('loadSheetBtn'),
-  syncLogsBtn: document.getElementById('syncLogsBtn'),
   googleStatus: document.getElementById('googleStatus')
 };
 
 let pairs = storage.getPairs();
 let settings = storage.getSettings();
-let activeCategory = '';
+let activeMainCategory = '';
+let activeSubCategory = '';
 let order = [];
 let index = 0;
 let revealed = false;
@@ -55,13 +57,24 @@ let timer = null;
 let sessionStartedAt = Date.now();
 let studiedIds = new Set();
 
-function normalizeCategory(category) {
-  return String(category || '未分類').trim() || '未分類';
+function normalizeCategory(category, fallback = '未分類') {
+  return String(category || fallback).trim() || fallback;
+}
+
+function activeCategoryLabel() {
+  return activeMainCategory && activeSubCategory ? `${activeMainCategory} / ${activeSubCategory}` : '';
+}
+
+function hasActiveLesson() {
+  return Boolean(activeMainCategory && activeSubCategory);
 }
 
 function activePairs() {
-  if (!activeCategory) return [];
-  return pairs.filter((pair) => normalizeCategory(pair.category) === activeCategory);
+  if (!activeMainCategory || !activeSubCategory) return [];
+  return pairs.filter((pair) =>
+    normalizeCategory(pair.mainCategory) === activeMainCategory &&
+    normalizeCategory(pair.subCategory, '標準') === activeSubCategory
+  );
 }
 
 function currentPair() {
@@ -87,13 +100,47 @@ function rebuildOrder(keepCurrent = false) {
 }
 
 function renderCategories() {
+  els.categoryList.innerHTML = '';
+  els.categoryBackBtn.hidden = !activeMainCategory || Boolean(activeSubCategory);
+  els.appHomeBtn.disabled = !activeMainCategory;
+
+  if (!activeMainCategory) {
+    els.categoryTitle.textContent = 'メインカテゴリ';
+    els.categoryDescription.textContent = '学習するメインカテゴリを選択';
+    renderCategoryButtons(groupByMainCategory(), (mainCategory) => {
+      activeMainCategory = mainCategory;
+      activeSubCategory = '';
+      renderCategories();
+    });
+    return;
+  }
+
+  els.categoryTitle.textContent = activeMainCategory;
+  els.categoryDescription.textContent = 'サブカテゴリを選択';
+  renderCategoryButtons(groupBySubCategory(activeMainCategory), (subCategory) => {
+    startCategory(activeMainCategory, subCategory);
+  });
+}
+
+function groupByMainCategory() {
   const categories = new Map();
   pairs.forEach((pair) => {
-    const category = normalizeCategory(pair.category);
-    categories.set(category, (categories.get(category) || 0) + 1);
+    const mainCategory = normalizeCategory(pair.mainCategory);
+    categories.set(mainCategory, (categories.get(mainCategory) || 0) + 1);
   });
+  return categories;
+}
 
-  els.categoryList.innerHTML = '';
+function groupBySubCategory(mainCategory) {
+  const categories = new Map();
+  pairs.filter((pair) => normalizeCategory(pair.mainCategory) === mainCategory).forEach((pair) => {
+    const subCategory = normalizeCategory(pair.subCategory, '標準');
+    categories.set(subCategory, (categories.get(subCategory) || 0) + 1);
+  });
+  return categories;
+}
+
+function renderCategoryButtons(categories, onSelect) {
   categories.forEach((count, category) => {
     const button = document.createElement('button');
     button.type = 'button';
@@ -115,22 +162,17 @@ function renderCategories() {
     textWrap.appendChild(meta);
     button.appendChild(textWrap);
     button.appendChild(arrow);
-    button.addEventListener('click', () => startCategory(category));
+    button.addEventListener('click', () => onSelect(category));
     els.categoryList.appendChild(button);
   });
 }
 
 function setHint(message) {
-  if (!els.gestureHint) return;
-  els.gestureHint.textContent = message;
-  window.clearTimeout(setHint.timer);
-  setHint.timer = window.setTimeout(() => {
-    els.gestureHint.textContent = '左右スワイプで前後';
-  }, 1400);
 }
 
 function showCategoryScreen() {
-  activeCategory = '';
+  activeMainCategory = '';
+  activeSubCategory = '';
   stopAll();
   renderCategories();
   els.categoryScreen.hidden = false;
@@ -138,10 +180,21 @@ function showCategoryScreen() {
   els.bottomBar.hidden = true;
 }
 
-function startCategory(category) {
-  activeCategory = normalizeCategory(category);
+function showSubCategoryScreen() {
+  activeSubCategory = '';
+  stopAll();
+  renderCategories();
+  els.categoryScreen.hidden = false;
+  els.studyPanel.hidden = true;
+  els.bottomBar.hidden = true;
+}
+
+function startCategory(mainCategory, subCategory) {
+  activeMainCategory = normalizeCategory(mainCategory);
+  activeSubCategory = normalizeCategory(subCategory, '標準');
   revealed = false;
   rebuildOrder();
+  els.appHomeBtn.disabled = false;
   els.categoryScreen.hidden = true;
   els.studyPanel.hidden = false;
   els.bottomBar.hidden = false;
@@ -158,49 +211,62 @@ function render() {
     return;
   }
 
-  els.cardSideLabel.textContent = revealed ? 'English' : '日本語';
   els.cardText.textContent = revealed ? pair.english : pair.japanese;
+  els.commentText.textContent = pair.comment || '';
+  els.commentText.hidden = !revealed || !pair.comment;
   els.questionCard.classList.toggle('answer', revealed);
   els.positionLabel.textContent = `${index + 1} / ${activePairs().length}`;
-  els.modeLabel.textContent = settings.autoPlayback ? '自動' : '通常';
   els.autoModeBtn.setAttribute('aria-pressed', String(settings.autoPlayback));
-  els.playBtn.disabled = !settings.autoPlayback;
-  els.playBtn.setAttribute('aria-pressed', String(isAutoPlaying));
-  els.playBtn.textContent = isAutoPlaying ? '■' : '▶';
+  els.autoModeBtn.textContent = isAutoPlaying ? '■A' : '▶︎A';
   els.shuffleBtn.setAttribute('aria-pressed', String(settings.shuffle));
   els.repeatBtn.setAttribute('aria-pressed', String(settings.repeat));
   updateWakeLockUi();
 }
 
-function saveSessionLog() {
+async function saveSessionLog() {
   const durationSec = Math.max(1, Math.floor((Date.now() - sessionStartedAt) / 1000));
   if (!studiedIds.size && durationSec < 10) return;
-  storage.addLog({
+  const log = storage.addLog({
     durationSec,
     itemCount: studiedIds.size,
     mode: isAutoPlaying ? 'auto' : 'manual',
-    category: activeCategory,
+    category: activeCategoryLabel(),
+    mainCategory: activeMainCategory,
+    subCategory: activeSubCategory,
     jaVoice: settings.jaVoice,
     enVoice: settings.enVoice,
     jaRate: settings.jaRate,
     enRate: settings.enRate
   });
+  syncLogToGoogle(log);
   sessionStartedAt = Date.now();
   studiedIds = new Set();
-  if (activeCategory) render();
+  if (activeMainCategory && activeSubCategory) render();
+}
+
+async function syncLogToGoogle(log) {
+  const config = storage.getGoogleConfig();
+  if (!config.sheetId || !config.clientId || !config.apiKey) return;
+  if (!googleSync.isAuthorized()) return;
+  try {
+    await googleSync.appendLogs(config, [log], { interactive: false });
+    els.googleStatus.textContent = '学習ログを自動保存しました';
+  } catch (error) {
+    els.googleStatus.textContent = error.message || 'ログ自動保存に失敗しました';
+  }
 }
 
 function markStudied() {
   const pair = currentPair();
   if (pair) studiedIds.add(pair.id);
-  if (activeCategory) render();
+  if (activeMainCategory && activeSubCategory) render();
 }
 
 function stopAll() {
   isAutoPlaying = false;
   window.clearTimeout(timer);
   speechController.stop();
-  if (activeCategory) render();
+  if (activeMainCategory && activeSubCategory) render();
 }
 
 function updateWakeLockUi(message = null) {
@@ -251,7 +317,7 @@ async function releaseWakeLock() {
 }
 
 function startAutoPlayback() {
-  if (!activeCategory || !settings.autoPlayback || isAutoPlaying) return;
+  if (!hasActiveLesson() || !settings.autoPlayback || isAutoPlaying) return;
   isAutoPlaying = true;
   render();
   autoSequence();
@@ -317,7 +383,7 @@ async function autoSequence() {
 }
 
 function goNext(fromAuto = false) {
-  if (!activeCategory) return;
+  if (!hasActiveLesson()) return;
   revealed = false;
   if (index < order.length - 1) {
     index += 1;
@@ -331,7 +397,7 @@ function goNext(fromAuto = false) {
 }
 
 function advanceManualFlow() {
-  if (!activeCategory) return;
+  if (!hasActiveLesson()) return;
   if (!revealed) {
     revealed = true;
     render();
@@ -344,7 +410,7 @@ function advanceManualFlow() {
 }
 
 function goPrev() {
-  if (!activeCategory) return;
+  if (!hasActiveLesson()) return;
   if (revealed) {
     revealed = false;
     render();
@@ -358,7 +424,7 @@ function goPrev() {
 }
 
 function animateCardChange(direction) {
-  if (!activeCategory || isTransitioning) return;
+  if (!hasActiveLesson() || isTransitioning) return;
   if (
     direction === 'next' &&
     !settings.autoPlayback &&
@@ -390,7 +456,7 @@ function animateCardChange(direction) {
 
 function setSetting(update) {
   settings = storage.saveSettings(update);
-  if (activeCategory) render();
+  if (hasActiveLesson()) render();
   else renderCategories();
 }
 
@@ -455,14 +521,30 @@ function loadGoogleConfigToForm() {
   els.apiKeyInput.value = config.apiKey;
 }
 
+function describeError(error) {
+  if (!error) return '不明なエラー';
+  if (typeof error === 'string') return error;
+  if (error.message) return error.message;
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+}
+
 function bindEvents() {
   els.openSettingsBtn.addEventListener('click', openSettings);
   els.closeSettingsBtn.addEventListener('click', closeSettings);
   els.settingsBackdrop.addEventListener('click', closeSettings);
+  els.closeLogBtn.addEventListener('click', closeLogModal);
   els.settingsTabs.forEach((tab) => {
     tab.addEventListener('click', () => selectSettingsTab(tab.dataset.tab));
   });
-  els.backToCategoriesBtn.addEventListener('click', () => {
+  els.categoryBackBtn.addEventListener('click', () => {
+    showCategoryScreen();
+  });
+  els.appHomeBtn.addEventListener('click', () => {
+    if (els.appHomeBtn.disabled) return;
     saveSessionLog();
     showCategoryScreen();
   });
@@ -475,18 +557,9 @@ function bindEvents() {
       saveSessionLog();
     }
   });
-  els.playBtn.addEventListener('click', () => {
-    if (!settings.autoPlayback) return;
-    if (isAutoPlaying) {
-      stopAll();
-      saveSessionLog();
-      return;
-    }
-    startAutoPlayback();
-  });
   els.shuffleBtn.addEventListener('click', () => {
     setSetting({ shuffle: !settings.shuffle });
-    if (activeCategory) rebuildOrder(true);
+    if (hasActiveLesson()) rebuildOrder(true);
     render();
   });
   els.repeatBtn.addEventListener('click', () => setSetting({ repeat: !settings.repeat }));
@@ -510,7 +583,7 @@ function bindEvents() {
   els.applyPairsBtn.addEventListener('click', () => {
     const nextPairs = storage.parsePairsText(els.pairEditor.value);
     if (!nextPairs.length) {
-      window.alert('カテゴリ[TAB]日本語[TAB]English の形式で入力してください');
+      window.alert('メインカテゴリ[TAB]サブカテゴリ[TAB]日本語[TAB]English の形式で入力してください');
       return;
     }
     pairs = nextPairs;
@@ -523,15 +596,18 @@ function bindEvents() {
     showCategoryScreen();
   });
   els.exportLogsBtn.addEventListener('click', () => {
-    els.logOutput.hidden = !els.logOutput.hidden;
     els.logOutput.textContent = JSON.stringify(storage.getLogs(), null, 2);
+    openLogModal();
   });
   els.saveGoogleConfigBtn.addEventListener('click', () => {
-    storage.saveGoogleConfig({
+    const savedConfig = storage.saveGoogleConfig({
       sheetId: els.sheetIdInput.value,
       clientId: els.clientIdInput.value,
       apiKey: els.apiKeyInput.value
     });
+    els.sheetIdInput.value = savedConfig.sheetId;
+    els.clientIdInput.value = savedConfig.clientId;
+    els.apiKeyInput.value = savedConfig.apiKey;
     els.googleStatus.textContent = 'Google設定を保存しました';
   });
   els.loadSheetBtn.addEventListener('click', async () => {
@@ -545,17 +621,8 @@ function bindEvents() {
       showCategoryScreen();
       els.googleStatus.textContent = `${loadedPairs.length}件の例文を読み込みました`;
     } catch (error) {
-      els.googleStatus.textContent = error.message || '読み込みに失敗しました';
-    }
-  });
-  els.syncLogsBtn.addEventListener('click', async () => {
-    try {
-      els.googleStatus.textContent = 'ログを保存しています';
-      const logs = storage.getLogs().slice(0, 20).reverse();
-      await googleSync.appendLogs(storage.getGoogleConfig(), logs);
-      els.googleStatus.textContent = `${logs.length}件のログを保存しました`;
-    } catch (error) {
-      els.googleStatus.textContent = error.message || 'ログ保存に失敗しました';
+      console.error('Google Sheets load failed:', error);
+      els.googleStatus.textContent = describeError(error);
     }
   });
   bindGestures();
@@ -638,6 +705,14 @@ function openSettings() {
 
 function closeSettings() {
   els.settingsModal.hidden = true;
+}
+
+function openLogModal() {
+  els.logPanel.hidden = false;
+}
+
+function closeLogModal() {
+  els.logPanel.hidden = true;
 }
 
 function init() {
